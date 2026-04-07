@@ -31,9 +31,24 @@ git fetch upstream
 git merge upstream/main
 ```
 
-## Agent Coordination
+## Agent Coordination Protocol
 
-Before starting work, **read `agent-updates.md`** at the repo root. After completing work, **update it** with what you changed. See that file for format.
+**This is mandatory for every agent session.** Follow these steps in order:
+
+### 1. READ `agent-updates.md`
+Before writing any code, read `agent-updates.md` at the repo root. Understand what other agents have changed recently, what state they left things in, and whether any work is marked WIP or blocked.
+
+### 2. RECONCILE your plan
+Compare what you intend to do against what `agent-updates.md` says. If another agent's changes overlap with your task, or the repo state doesn't match what you expected, stop and resolve the discrepancy before proceeding. Do not silently overwrite or undo another agent's work.
+
+### 3. WRITE your intent to `agent-updates.md`
+Add an entry at the top of the changelog with `State: in-progress` describing what you are about to do. Commit and push this before starting implementation. This signals to other agents that the work is claimed.
+
+### 4. EXECUTE your plan
+Do the work. Commit to a feature branch on `origin` (the chryst-monode fork), not directly to `main`.
+
+### 5. UPDATE `agent-updates.md` with results
+When done, update your entry: change `State` to `clean` (or `blocked` with reason), fill in the final list of files changed, and summarize what was actually done (not just what was planned). Commit and push.
 
 ## Project Details
 
