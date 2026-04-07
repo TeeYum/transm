@@ -58,7 +58,12 @@ def format_comparison_table(before: Metrics, after: Metrics) -> str:
         ("LUFS (Integrated)", before.lufs_integrated, after.lufs_integrated, "LUFS"),
         ("Loudness Range", before.loudness_range, after.loudness_range, "LU"),
         ("True Peak", before.true_peak_dbtp, after.true_peak_dbtp, "dBTP"),
-        ("Peak-to-Loudness Ratio", before.peak_to_loudness_ratio, after.peak_to_loudness_ratio, "dB"),
+        (
+            "Peak-to-Loudness Ratio",
+            before.peak_to_loudness_ratio,
+            after.peak_to_loudness_ratio,
+            "dB",
+        ),
         ("Crest Factor", before.crest_factor_db, after.crest_factor_db, "dB"),
         ("Spectral Centroid", before.spectral_centroid_hz, after.spectral_centroid_hz, "Hz"),
         ("Clipping", before.clipping_percent, after.clipping_percent, "%"),

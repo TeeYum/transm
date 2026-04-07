@@ -29,10 +29,7 @@ def read_audio(path: Path | str) -> AudioBuffer:
             import librosa
 
             mono_data, sr = librosa.load(str(path), sr=None, mono=False)
-            if mono_data.ndim == 1:
-                data = mono_data[:, np.newaxis]
-            else:
-                data = mono_data.T  # librosa returns (channels, samples)
+            data = mono_data[:, np.newaxis] if mono_data.ndim == 1 else mono_data.T
             data = data.astype(np.float32)
         except Exception as e:
             msg = f"Could not read audio file: {path}"

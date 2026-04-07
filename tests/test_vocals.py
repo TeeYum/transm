@@ -5,7 +5,6 @@ from __future__ import annotations
 import numpy as np
 from scipy.signal import butter, sosfilt
 
-from tests.conftest import generate_sibilant_vocal
 from transm.dsp.vocals import process_vocals
 from transm.types import GlobalParams, PresetParams, VocalsParams
 

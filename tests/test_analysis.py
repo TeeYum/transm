@@ -7,6 +7,7 @@ import math
 import numpy as np
 import pytest
 
+from tests.conftest import generate_sine
 from transm.analysis import (
     compute_delta,
     compute_metrics,
@@ -20,8 +21,6 @@ from transm.analysis import (
     measure_true_peak,
 )
 from transm.types import AudioBuffer, Metrics
-
-from tests.conftest import generate_crushed_drum_pattern, generate_sine
 
 
 class TestMeasureLufs:

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import logging
 import time
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 from transm.analysis import compute_delta, compute_metrics
 from transm.audio_io import read_audio, write_audio
@@ -14,12 +14,10 @@ from transm.dsp.drums import process_drums
 from transm.dsp.other import process_other
 from transm.dsp.vocals import process_vocals
 from transm.limiter import apply_final_limiter
-from transm.preset_loader import load_preset
 from transm.remix import remix_stems
 from transm.separation import StemSeparator
 from transm.stem_qa import assess_stems
 from transm.types import (
-    AudioBuffer,
     Metrics,
     PipelineResult,
     PresetParams,

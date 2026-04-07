@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from tests.conftest import generate_signal_with_dynamics, generate_sine
+from tests.conftest import generate_signal_with_dynamics
 from transm.dsp.expander import expand_downward
 from transm.types import AudioBuffer
 
@@ -21,7 +21,6 @@ class TestDownwardExpander:
         buf = generate_signal_with_dynamics()
         processed = expand_downward(buf, threshold_db=-20.0, ratio=2.0, range_db=-40.0)
 
-        sr = buf.sample_rate
         n = buf.data.shape[0]
         quarter = n // 4
 

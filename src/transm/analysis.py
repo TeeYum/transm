@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import numpy as np
 import pyloudnorm
-from numpy.typing import NDArray
 from scipy import signal
 
 from transm.types import AudioBuffer, Metrics, MetricsDelta

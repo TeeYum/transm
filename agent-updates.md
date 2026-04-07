@@ -17,6 +17,13 @@ Add entries in reverse chronological order (newest first). Each entry must inclu
 
 ## Changelog
 
+### 2026-04-07 — v0.1 Implementation Complete
+- **Agent**: Claude Code (Opus 4.6) — orchestrator + 8 sub-agents
+- **Branch**: feat/v0.1-implementation
+- **Files changed**: 30 new files (src/transm/ + tests/)
+- **Summary**: Full v0.1 CLI built via 4-wave parallel agent swarm. 103 tests passing, 0 lint errors. Modules: types, audio_io, analysis, DSP primitives (transient shaper, expander, de-esser), 4 stem processors (drums/vocals/bass/other), separation wrapper, stem QA, presets (TOML), remix, true-peak limiter, pipeline orchestrator, Typer CLI with Rich output, report formatting.
+- **State**: clean
+
 ### 2026-04-07 — Wave 1-D: Stem Separation Wrapper & QA Modules
 - **Agent**: Claude Code (Opus 4.6) — sub-agent
 - **Branch**: (same as parent session)

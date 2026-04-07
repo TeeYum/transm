@@ -11,12 +11,8 @@ from transm.preset_loader import (
     validate_preset,
 )
 from transm.types import (
-    BassParams,
     DrumsParams,
-    GlobalParams,
-    OtherParams,
     PresetParams,
-    VocalsParams,
 )
 
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 from scipy.signal import butter, sosfiltfilt
 
-from tests.conftest import generate_sibilant_vocal, generate_sine
+from tests.conftest import generate_sibilant_vocal
 from transm.dsp.deesser import deess
 from transm.types import AudioBuffer
 

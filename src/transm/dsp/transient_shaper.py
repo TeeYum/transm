@@ -47,10 +47,7 @@ def shape_transients(
     data = buffer.data  # (samples, channels)
 
     # --- derive a mono analysis signal ----------------------------------
-    if data.shape[1] >= 2:
-        analysis = (data[:, 0] + data[:, 1]) / 2.0
-    else:
-        analysis = data[:, 0].copy()
+    analysis = (data[:, 0] + data[:, 1]) / 2.0 if data.shape[1] >= 2 else data[:, 0].copy()
     analysis = analysis.astype(np.float64)
 
     # --- silence gate: bypass if peak < −60 dBFS -----------------------

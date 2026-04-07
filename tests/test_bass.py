@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from tests.conftest import generate_sine, SR
+from tests.conftest import SR, generate_sine
 from transm.dsp.bass import process_bass
 from transm.types import BassParams, GlobalParams, PresetParams
 

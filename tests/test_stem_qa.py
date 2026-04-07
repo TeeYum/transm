@@ -6,7 +6,6 @@ Uses synthetic stems — no model download needed, all tests run fast.
 from __future__ import annotations
 
 import numpy as np
-import pytest
 
 from transm.stem_qa import (
     assess_stems,

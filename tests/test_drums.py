@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import numpy as np
 
-from tests.conftest import generate_crushed_drum_pattern
 from transm.dsp.drums import process_drums
 from transm.types import DrumsParams, GlobalParams, PresetParams
 

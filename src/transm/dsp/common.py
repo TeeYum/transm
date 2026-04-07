@@ -8,7 +8,6 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.signal import butter, sosfiltfilt
 
-
 # ---------------------------------------------------------------------------
 # Envelope follower — numba-accelerated with pure-Python fallback
 # ---------------------------------------------------------------------------
@@ -24,10 +23,7 @@ def _envelope_follower_python(
     current = 0.0
     for i in range(n):
         inp = abs(signal_1d[i])
-        if inp > current:
-            coeff = attack_coeff
-        else:
-            coeff = release_coeff
+        coeff = attack_coeff if inp > current else release_coeff
         current = coeff * current + (1.0 - coeff) * inp
         env[i] = current
     return env
@@ -47,10 +43,7 @@ try:
         current = 0.0
         for i in range(n):
             inp = abs(signal_1d[i])
-            if inp > current:
-                coeff = attack_coeff
-            else:
-                coeff = release_coeff
+            coeff = attack_coeff if inp > current else release_coeff
             current = coeff * current + (1.0 - coeff) * inp
             env[i] = current
         return env
