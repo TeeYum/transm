@@ -17,6 +17,13 @@ def _make_console() -> Console:
     return Console(file=StringIO(), force_terminal=True, width=100)
 
 
+def _get_console_output(console: Console) -> str:
+    """Extract string output from a Console backed by a StringIO."""
+    f = console.file
+    assert isinstance(f, StringIO)
+    return f.getvalue()
+
+
 def format_metrics_table(metrics: Metrics) -> str:
     """Format metrics as a Rich table rendered to string."""
     table = Table(title="Audio Metrics", show_header=True, header_style="bold cyan")
@@ -34,7 +41,7 @@ def format_metrics_table(metrics: Metrics) -> str:
 
     console = _make_console()
     console.print(table)
-    return console.file.getvalue()
+    return _get_console_output(console)
 
 
 def _delta_arrow(delta: float) -> str:
@@ -82,7 +89,7 @@ def format_comparison_table(before: Metrics, after: Metrics) -> str:
 
     console = _make_console()
     console.print(table)
-    return console.file.getvalue()
+    return _get_console_output(console)
 
 
 def format_stem_qa_table(qa: StemQAReport) -> str:
@@ -125,7 +132,7 @@ def format_stem_qa_table(qa: StemQAReport) -> str:
 
     console = _make_console()
     console.print(table)
-    return console.file.getvalue()
+    return _get_console_output(console)
 
 
 def metrics_to_json(metrics: Metrics) -> str:

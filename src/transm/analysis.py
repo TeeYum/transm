@@ -12,9 +12,22 @@ from scipy import signal
 
 from transm.types import AudioBuffer, Metrics, MetricsDelta
 
+_MIN_DURATION_S = 0.5  # pyloudnorm needs at least ~0.4s for a measurement block
+
 
 def compute_metrics(buffer: AudioBuffer) -> Metrics:
-    """Compute all analysis metrics for an audio buffer."""
+    """Compute all analysis metrics for an audio buffer.
+
+    Raises ValueError for files shorter than 0.5 seconds, which are too short
+    for reliable loudness measurement.
+    """
+    if buffer.duration < _MIN_DURATION_S:
+        msg = (
+            f"Audio too short for analysis ({buffer.duration:.2f}s). "
+            f"Minimum duration is {_MIN_DURATION_S}s."
+        )
+        raise ValueError(msg)
+
     lufs = measure_lufs(buffer)
     lra = measure_lra(buffer)
     tp = measure_true_peak(buffer)

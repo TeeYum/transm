@@ -41,10 +41,8 @@ def apply_final_limiter(
     # Step 2: True-peak limiting — oversample, clamp, downsample
     ceiling_linear = 10.0 ** (ceiling_dbtp / 20.0)
 
+    result_lufs = current_lufs  # initialise for the else-branch
     for i in range(max_iterations):
-        # Apply true-peak limiting via 4x oversampling
-        data = _true_peak_limit(data, ceiling_linear, sr)
-
         # Re-measure and adjust if needed
         result_buf = AudioBuffer(data=data.astype(np.float32), sample_rate=sr)
         result_lufs = measure_lufs(result_buf)
@@ -65,6 +63,9 @@ def apply_final_limiter(
         correction_db = target_lufs - result_lufs
         correction_linear = 10.0 ** (correction_db / 20.0)
         data = data * correction_linear
+
+        # Apply true-peak limiting AFTER gain correction to enforce ceiling
+        data = _true_peak_limit(data, ceiling_linear, sr)
     else:
         logger.warning(
             "Limiter did not converge after %d iterations: LUFS=%.1f (target=%.1f)",
@@ -73,10 +74,15 @@ def apply_final_limiter(
             target_lufs,
         )
 
+    # ALWAYS enforce ceiling as the absolute final step, whether converged or not
+    data = _true_peak_limit(data, ceiling_linear, sr)
+
     return AudioBuffer(data=data.astype(np.float32), sample_rate=sr)
 
 
-def _true_peak_limit(data: np.ndarray, ceiling_linear: float, sr: int) -> np.ndarray:
+def _true_peak_limit(
+    data: np.ndarray, ceiling_linear: float, sr: int
+) -> np.ndarray:
     """Apply true-peak limiting via 4x oversampling.
 
     1. Upsample 4x

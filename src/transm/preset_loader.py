@@ -5,6 +5,7 @@ from __future__ import annotations
 import tomllib
 from importlib import resources
 from pathlib import Path
+from typing import Any
 
 from transm.types import (
     BassParams,
@@ -41,7 +42,7 @@ _GAIN_FIELDS: dict[str, set[str]] = {
 }
 
 
-def _toml_to_preset(data: dict) -> PresetParams:
+def _toml_to_preset(data: dict[str, Any]) -> PresetParams:
     """Convert parsed TOML dict to PresetParams."""
     metadata = data.get("metadata", {})
     return PresetParams(
@@ -197,12 +198,12 @@ def validate_preset(params: PresetParams) -> list[str]:
     return warnings
 
 
-def _scale_dataclass(obj: object, gain_fields: set[str], intensity: float) -> dict:
+def _scale_dataclass(obj: object, gain_fields: set[str], intensity: float) -> dict[str, Any]:
     """Scale gain fields of a frozen dataclass, returning kwargs for a new instance."""
     import dataclasses
 
     result = {}
-    for f in dataclasses.fields(obj):
+    for f in dataclasses.fields(obj):  # type: ignore[arg-type]
         value = getattr(obj, f.name)
         if f.name in gain_fields:
             result[f.name] = value * intensity

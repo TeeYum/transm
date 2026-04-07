@@ -58,7 +58,4 @@ def process_drums(buffer: AudioBuffer, params: PresetParams) -> AudioBuffer:
     data = result.data.copy()
     processed = board(data.T, sample_rate=float(sr)).T
 
-    # Safety clamp — EQ boost after transient shaping can push above 1.0
-    processed = np.clip(processed, -1.0, 1.0)
-
     return AudioBuffer(data=processed.astype(np.float32), sample_rate=sr)

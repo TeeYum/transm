@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
@@ -30,9 +31,9 @@ def _envelope_follower_python(
 
 
 try:
-    import numba  # type: ignore[import-untyped]
+    import numba
 
-    @numba.jit(nopython=True)  # type: ignore[misc]
+    @numba.jit(nopython=True)
     def _envelope_follower_numba(
         signal_1d: np.ndarray,
         attack_coeff: float,
@@ -97,9 +98,9 @@ def db_to_linear(db: float) -> float:
 
 
 def linear_to_db(
-    linear: float | NDArray[np.floating],
+    linear: float | NDArray[np.floating[Any]],
     floor_db: float = -120.0,
-) -> float | NDArray[np.floating]:
+) -> float | NDArray[np.floating[Any]]:
     """Convert linear amplitude to dB with a noise floor.
 
     Returns 20 * log10(max(linear, floor_linear)).
@@ -107,7 +108,7 @@ def linear_to_db(
     floor_linear = 10.0 ** (floor_db / 20.0)
     if isinstance(linear, np.ndarray):
         safe = np.maximum(linear, floor_linear)
-        return 20.0 * np.log10(safe)  # type: ignore[return-value]
+        return 20.0 * np.log10(safe)
     return 20.0 * math.log10(max(float(linear), floor_linear))
 
 

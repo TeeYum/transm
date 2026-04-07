@@ -237,3 +237,11 @@ class TestComputeMetrics:
         metrics = compute_metrics(crushed_drums)
         assert math.isfinite(metrics.lufs_integrated)
         assert metrics.clipping_percent >= 0.0
+
+    def test_short_file_raises(self) -> None:
+        """Files shorter than 0.5s should raise ValueError."""
+        short = AudioBuffer.from_array(
+            np.zeros((4410, 2), dtype=np.float32), sr=44100  # 0.1s
+        )
+        with pytest.raises(ValueError, match="too short"):
+            compute_metrics(short)

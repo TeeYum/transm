@@ -17,11 +17,11 @@ from rich.progress import (
 )
 
 from transm.analysis import compute_metrics
-from transm.audio_io import read_audio
+from transm.audio_io import read_audio, write_audio
 from transm.pipeline import Pipeline
 from transm.preset_loader import load_preset, load_preset_from_file, scale_by_intensity
 from transm.report import format_comparison_table, format_metrics_table, metrics_to_json
-from transm.types import PresetParams
+from transm.separation import StemSeparator
 
 app = typer.Typer(
     name="transm",
@@ -68,9 +68,7 @@ def separate(
         if output_dir is None:
             output_dir = input_file.parent / f"{input_file.stem}_stems"
 
-        # Create a dummy preset -- separation doesn't use preset params
-        dummy_preset = PresetParams(name="separation-only")
-        pipeline = Pipeline(preset=dummy_preset, backend=backend)
+        sep = StemSeparator(backend=backend, model_name=model)
 
         with Progress(
             SpinnerColumn(),
@@ -78,8 +76,14 @@ def separate(
             TimeElapsedColumn(),
         ) as progress:
             task = progress.add_task("Separating stems...", total=None)
-            stems = pipeline.run_separation_only(input_file, output_dir)
+            stems = sep.separate(input_file)
             progress.update(task, description="Done", completed=1, total=1)
+
+        # Write stems to output directory
+        output_dir.mkdir(parents=True, exist_ok=True)
+        for name, buf in stems.items():
+            stem_path = output_dir / f"{input_file.stem}_{name}.wav"
+            write_audio(buf, stem_path)
 
         typer.echo(f"Stems written to: {output_dir}")
         for name, _buf in stems.items():
@@ -98,12 +102,23 @@ def process(
         None, help="Processing intensity 0.0-1.0 (overrides preset)"
     ),
     backend: str = typer.Option("demucs", help="Separation backend"),
+    model: str = typer.Option(None, help="Specific separator model name/filename"),
     output: Path = typer.Option(None, "--output", "-o", help="Output file path"),
     output_format: str = typer.Option("wav", "--format", help="Output format: wav, flac"),
     json_output: bool = typer.Option(False, "--json", help="Output metrics as JSON"),
 ) -> None:
     """Full remastering pipeline: separate, process stems, remix."""
     try:
+        # 0. Validate output format
+        valid_formats = ("wav", "flac")
+        if output_format.lower() not in valid_formats:
+            _err_console().print(
+                f"[bold red]Error:[/bold red] Unsupported format '{output_format}'. "
+                f"Choose from: {', '.join(valid_formats)}"
+            )
+            raise SystemExit(1)
+        output_format = output_format.lower()
+
         # 1. Load preset
         if preset_file is not None:
             params = load_preset_from_file(preset_file)
@@ -124,7 +139,9 @@ def process(
             output = input_file.parent / f"{input_file.stem}_transm.{output_format}"
 
         # 4. Create pipeline and run with progress bar
-        pipeline = Pipeline(preset=params, backend=backend, output_format=output_format)
+        pipeline = Pipeline(
+            preset=params, backend=backend, output_format=output_format, model_name=model
+        )
 
         with Progress(
             SpinnerColumn(),

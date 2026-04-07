@@ -37,6 +37,7 @@ class Pipeline:
         preset: PresetParams,
         backend: str = "demucs",
         output_format: str = "wav",
+        model_name: str | None = None,
     ) -> None:
         """Initialize pipeline with preset and separation backend.
 
@@ -44,11 +45,12 @@ class Pipeline:
             preset: Processing parameters for all stems and global settings.
             backend: Stem separation backend ("demucs" or "roformer").
             output_format: Output file format ("wav" or "flac").
+            model_name: Specific model filename for the separator, or None for default.
         """
         self.preset = preset
         self.backend = backend
         self.output_format = output_format
-        self._separator = StemSeparator(backend=backend)
+        self._separator = StemSeparator(backend=backend, model_name=model_name)
 
     def run(
         self,

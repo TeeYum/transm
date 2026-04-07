@@ -46,7 +46,6 @@ def deess(
     att = time_to_coeff(attack_ms, sr)
     rel = time_to_coeff(release_ms, sr)
 
-    10.0 ** (threshold_db / 20.0)
     result = data.copy()
 
     for ch in range(n_channels):

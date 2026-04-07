@@ -4,13 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
-
-if TYPE_CHECKING:
-    pass
 
 
 @dataclass(frozen=True)
@@ -24,7 +21,7 @@ class AudioBuffer:
     sample_rate: int
 
     @staticmethod
-    def from_array(data: NDArray[np.floating], sr: int) -> AudioBuffer:
+    def from_array(data: NDArray[np.floating[Any]], sr: int) -> AudioBuffer:
         """Create an AudioBuffer, validating and converting to float32 (samples, channels)."""
         arr = np.asarray(data, dtype=np.float32)
         if arr.ndim == 1:

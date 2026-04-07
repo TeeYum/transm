@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import soundfile as sf
@@ -82,7 +83,7 @@ def write_audio(buffer: AudioBuffer, path: Path | str) -> Path:
     return path
 
 
-def get_audio_info(path: Path | str) -> dict:
+def get_audio_info(path: Path | str) -> dict[str, Any]:
     """Return metadata without loading the full audio data."""
     path = Path(path)
     info = sf.info(str(path))

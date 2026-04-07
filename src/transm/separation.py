@@ -36,14 +36,16 @@ class StemSeparator:
         self,
         backend: str = "demucs",
         model_name: str | None = None,
-        device: str = "auto",
     ) -> None:
         """Initialize separator.
 
         Args:
             backend: "demucs" or "roformer"
             model_name: specific model filename, or None for the backend default
-            device: "auto", "cpu", "cuda", "mps"
+
+        Note:
+            audio-separator auto-detects the compute device internally.
+            Use ``detect_device()`` for informational purposes only.
         """
         if backend not in _DEFAULT_MODELS:
             msg = f"Unknown backend '{backend}'. Choose from: {list(_DEFAULT_MODELS)}"
@@ -51,7 +53,6 @@ class StemSeparator:
 
         self.backend = backend
         self.model_name = model_name or _DEFAULT_MODELS[backend]
-        self.device = self.detect_device() if device == "auto" else device
 
     def separate(self, input_path: Path) -> StemSet:
         """Separate audio into 4 stems.
@@ -59,22 +60,31 @@ class StemSeparator:
         Reads the file via audio-separator, writes stems to a temp directory,
         reads them back as AudioBuffers, and returns a StemSet.
         """
-        from audio_separator.separator import Separator
-
         input_path = Path(input_path)
         if not input_path.exists():
             msg = f"Input file not found: {input_path}"
             raise FileNotFoundError(msg)
 
+        try:
+            from audio_separator.separator import Separator
+        except ImportError as e:
+            msg = (
+                "Stem separation requires audio-separator with ONNX runtime. "
+                "If on Python 3.13, onnxruntime may not be available yet. "
+                "Install with: pip install transm[separator]"
+            )
+            raise ImportError(msg) from e
+
         tmp_dir = tempfile.TemporaryDirectory()
         try:
             output_dir = Path(tmp_dir.name)
+            detected = self.detect_device()
             logger.info(
-                "Separating %s with %s (model=%s, device=%s)",
+                "Separating %s with %s (model=%s, likely device=%s)",
                 input_path.name,
                 self.backend,
                 self.model_name,
-                self.device,
+                detected,
             )
 
             separator = Separator(output_dir=str(output_dir))

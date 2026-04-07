@@ -52,6 +52,19 @@ class TestLimiterRespectsCeiling:
         )
 
 
+class TestLimiterCeilingEnforced:
+    def test_limiter_ceiling_enforced_sparse_impulses(self) -> None:
+        """Ceiling must be respected even when LUFS and ceiling conflict (high crest factor)."""
+        sr = 44100
+        x = np.zeros((sr * 3, 2), dtype=np.float32)
+        x[:: sr // 2] = 0.9  # sparse impulses
+        buf = AudioBuffer(data=x, sample_rate=sr)
+        out = apply_final_limiter(buf, target_lufs=-14.0, ceiling_dbtp=-1.0)
+        tp = measure_true_peak(out)
+        assert tp <= -0.5, f"True peak {tp:.1f} dBTP exceeds ceiling"
+        assert np.max(np.abs(out.data)) <= 1.0, "Sample peak exceeds 1.0"
+
+
 class TestLimiterPreservesShape:
     def test_limiter_preserves_shape(self) -> None:
         """Shape and sample rate should be preserved."""

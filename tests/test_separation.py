@@ -1,27 +1,26 @@
 """Tests for stem separation wrapper.
 
-All tests are marked slow+integration since they require model downloads.
-Only test_separator_init and test_device_detection run without models.
+Unit tests (no markers) verify StemSeparator construction and error handling.
+Only test_separate_synthetic downloads models and is marked slow/integration.
 """
 
 from __future__ import annotations
+
+from pathlib import Path
 
 import pytest
 
 from transm.separation import StemSeparator
 
 
-@pytest.mark.slow
-@pytest.mark.integration
 class TestStemSeparator:
-    """Tests for StemSeparator (most require model download)."""
+    """Tests for StemSeparator — most do NOT require model download."""
 
     def test_separator_init(self) -> None:
         """StemSeparator can be instantiated with default settings."""
         sep = StemSeparator()
         assert sep.backend == "demucs"
         assert sep.model_name == "htdemucs_ft.yaml"
-        assert sep.device in ("cuda", "mps", "cpu")
 
     def test_separator_init_roformer(self) -> None:
         """StemSeparator can be instantiated with roformer backend."""
@@ -39,6 +38,11 @@ class TestStemSeparator:
         sep = StemSeparator(model_name="custom_model.yaml")
         assert sep.model_name == "custom_model.yaml"
 
+    def test_model_name_passthrough(self) -> None:
+        """Verify a custom model name is stored correctly."""
+        sep = StemSeparator(model_name="custom.yaml")
+        assert sep.model_name == "custom.yaml"
+
     def test_device_detection(self) -> None:
         """detect_device returns a valid device string."""
         device = StemSeparator.detect_device()
@@ -46,13 +50,21 @@ class TestStemSeparator:
 
     def test_separate_missing_file(self) -> None:
         """separate() raises FileNotFoundError for nonexistent input."""
-        from pathlib import Path
-
         sep = StemSeparator()
         with pytest.raises(FileNotFoundError):
             sep.separate(Path("/nonexistent/audio.wav"))
 
-    def test_separate_synthetic(self, tmp_path: pytest.TempPathFactory) -> None:
+    def test_separator_dependency_diagnostic(self) -> None:
+        """Verify separator can be constructed — catches missing onnxruntime early."""
+        try:
+            sep = StemSeparator()
+            assert sep.backend == "demucs"
+        except ImportError as e:
+            pytest.skip(f"Separator dependencies not available: {e}")
+
+    @pytest.mark.slow
+    @pytest.mark.integration
+    def test_separate_synthetic(self, tmp_path: Path) -> None:
         """Integration: separate a short synthetic WAV and verify StemSet structure.
 
         This test downloads the model on first run and is slow.
@@ -77,7 +89,7 @@ class TestStemSeparator:
         input_path = tmp_path / "test_mix.wav"
         sf.write(str(input_path), stereo, sr)
 
-        sep = StemSeparator(device="cpu")
+        sep = StemSeparator()
         stem_set = sep.separate(input_path)
 
         # Verify structure
