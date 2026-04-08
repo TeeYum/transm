@@ -8,13 +8,8 @@ Transm separates crushed masters into individual stems using state-of-the-art AI
 
 As I Lay Dying — "94 Hours" (10s clip, 0:30–0:40). Processed with the `2000s-metalcore` preset at intensity 0.7.
 
-**Original** (heavily compressed, -12.5 LUFS):
-
-https://github.com/user-attachments/assets/placeholder-original
-
-**Remastered** (restored dynamics, -14.0 LUFS, +4.4 dB crest factor):
-
-https://github.com/user-attachments/assets/placeholder-remastered
+- [Original clip](docs/samples/aild_94hours_original_clip.wav) (heavily compressed, -12.5 LUFS)
+- [Remastered clip](docs/samples/aild_94hours_transm_70_clip.wav) (restored dynamics, -14.0 LUFS, +4.4 dB crest factor)
 
 | Metric | Before | After | Change |
 |--------|--------|-------|--------|
