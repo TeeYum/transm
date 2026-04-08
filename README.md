@@ -11,6 +11,7 @@ Transm separates crushed masters into individual stems using state-of-the-art AI
 ## Documentation
 
 - [Architecture](docs/architecture.md) — Technical architecture, pipeline design, tech stack, and roadmap
+- [Capture Component](docs/capture-component.md) — Lossless stream capture from Spotify, Apple Music, Tidal via system audio loopback
 - [Feasibility Assessment](docs/feasibility-assessment.md) — Honest difficulty estimates, model fine-tuning feasibility, and adversarial analysis review
 - [Agent Updates](agent-updates.md) — Changelog of all agent-authored changes
 

@@ -60,11 +60,13 @@ Multiple research implementations exist (`rajmic/declipping2020_codes`, `kripton
 
 ## Architecture: The Transm Pipeline
 
+Transm has two major components: the **Capture** module (for acquiring lossless source audio from streaming services) and the **Processing** pipeline (for AI-powered remastering). See [Capture Component](capture-component.md) for the full capture specification.
+
 ```
                          Transm Pipeline
                          ===============
 
-[Input: Crushed Master]
+[Input: Crushed Master — CD rip, purchased FLAC, or Transm Capture output]
          |
          v
   +------+-------+
