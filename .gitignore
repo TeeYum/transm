@@ -31,6 +31,9 @@ Thumbs.db
 *.aac
 *.m4a
 
+# Exception: demo sample clips in docs
+!docs/samples/*.wav
+
 # Model weights
 *.pt
 *.pth
