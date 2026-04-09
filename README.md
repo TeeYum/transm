@@ -34,7 +34,7 @@ All clips processed with the `2000s-metalcore` preset at intensity 0.7. Download
 
 ---
 
-Of Mice & Men — "O.G. Loko" (15s clip, 2:49–3:04). Processed with the `2000s-metalcore` preset at intensity 0.7.
+### Of Mice & Men — "O.G. Loko" (15s clip, 2:49–3:04). Processed with the `2000s-metalcore` preset at intensity 0.7.
 
 - [Original clip](docs/samples/omm_ogloko_original_clip.wav) (brickwalled, -16.1 LUFS)
 - [Remastered clip](docs/samples/omm_ogloko_transm_clip.wav) (restored dynamics, -16.0 LUFS, +6.3 dB crest factor)
