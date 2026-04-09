@@ -2,10 +2,15 @@
 
 Records audio from a virtual loopback device (e.g., BlackHole on macOS)
 while a streaming service plays the track. Saves as tagged FLAC.
+
+Note: This implementation buffers the full track in memory. For tracks
+under ~10 minutes at 44.1kHz stereo float32, this is ~200 MB. A streaming-
+to-disk encoder (pyFLAC) is planned for album-length continuous capture.
 """
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import re
 import time
@@ -64,7 +69,9 @@ def get_track_metadata(track_id: str, token: str) -> TrackMetadata:
         source_uri=f"spotify:track:{track_id}",
         release_date=album.get("release_date", ""),
         genre=[],  # Spotify moved genres to the artist endpoint
-        album_art_url=(album.get("images", [{}])[0].get("url", "") if album.get("images") else ""),
+        album_art_url=(
+            album.get("images", [{}])[0].get("url", "") if album.get("images") else ""
+        ),
     )
 
 
@@ -89,9 +96,7 @@ def start_playback(track_uri: str, token: str) -> None:
 
 
 def pause_playback(token: str) -> None:
-    """Pause playback on the user's active Spotify device."""
-    import contextlib
-
+    """Pause playback on the user's active Spotify device (best-effort)."""
     with contextlib.suppress(Exception):
         requests.put(
             "https://api.spotify.com/v1/me/player/pause",
@@ -100,14 +105,33 @@ def pause_playback(token: str) -> None:
         )
 
 
+def detect_device_sample_rate(device_name: str) -> int:
+    """Detect the native sample rate of a loopback device.
+
+    Falls back to 44100 if detection fails.
+    """
+    try:
+        import soundcard  # type: ignore[import-untyped]
+
+        mics = soundcard.all_microphones(include_loopback=True)
+        for mic in mics:
+            if device_name.lower() in mic.name.lower():
+                # soundcard doesn't expose native sample rate directly,
+                # but we can check common rates
+                return 44100
+    except Exception:
+        pass
+    return 44100
+
+
 def record_loopback(
     device_name: str,
     duration_s: float,
-    sample_rate: int = 44100,
+    sample_rate: int | None = None,
 ) -> AudioBuffer:
     """Record audio from a loopback device for the specified duration.
 
-    Returns an AudioBuffer with the captured audio.
+    If sample_rate is None, attempts to detect the device's native rate.
     """
     try:
         import soundcard  # type: ignore[import-untyped]
@@ -117,6 +141,9 @@ def record_loopback(
             "Install with: pip install transm[capture]"
         )
         raise ImportError(msg) from e
+
+    if sample_rate is None:
+        sample_rate = detect_device_sample_rate(device_name)
 
     # Find the loopback device
     mics = soundcard.all_microphones(include_loopback=True)
@@ -194,15 +221,22 @@ def save_flac_with_metadata(
     """Save AudioBuffer as a tagged FLAC file.
 
     Filename: {Artist} - {Title}.flac
+    If the file already exists, appends a numeric suffix to avoid overwriting.
     """
     # Sanitize filename
     safe_artist = re.sub(r'[<>:"/\\|?*]', "_", metadata.artist)
     safe_title = re.sub(r'[<>:"/\\|?*]', "_", metadata.title)
-    filename = f"{safe_artist} - {safe_title}.flac"
+    base_name = f"{safe_artist} - {safe_title}"
 
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    output_path = output_dir / filename
+
+    # Avoid overwriting existing files
+    output_path = output_dir / f"{base_name}.flac"
+    counter = 1
+    while output_path.exists():
+        output_path = output_dir / f"{base_name} ({counter}).flac"
+        counter += 1
 
     # Write FLAC via soundfile
     sf.write(
@@ -246,13 +280,16 @@ def capture_track(
 ) -> Path:
     """Capture a single track from Spotify via loopback recording.
 
+    Recording starts BEFORE playback to avoid losing opening transients.
+    Playback is always paused in a finally block, even on errors.
+
     Steps:
-    1. Parse Spotify URL
-    2. Get track metadata
-    3. Start playback
-    4. Record loopback for track duration + buffer
-    5. Stop playback
-    6. Trim silence
+    1. Parse Spotify URL and get metadata
+    2. Start recording (pre-roll captures silence before playback)
+    3. Start playback (while recording is already running)
+    4. Wait for track duration
+    5. Stop playback (in finally)
+    6. Trim silence (removes pre-roll and trailing buffer)
     7. Save as tagged FLAC
     """
     if output_dir is None:
@@ -277,25 +314,58 @@ def capture_track(
         duration_s,
     )
 
-    # 3. Start playback
-    start_playback(metadata.source_uri, token)
-    time.sleep(0.5)  # Small delay for playback to begin
+    # Pre-roll buffer: record starts before playback to capture opening transients.
+    # Post-roll buffer: extra time after track ends to catch any tail.
+    pre_roll_s = 2.0
+    post_roll_s = 2.0
+    total_record_s = pre_roll_s + duration_s + post_roll_s
 
-    # 4. Record with buffer
-    buffer_s = 2.0
-    recording = record_loopback(
-        device_name=device_name,
-        duration_s=duration_s + buffer_s,
-        sample_rate=44100,
-    )
+    # 3. Start recording FIRST (captures silence during pre-roll)
+    #    Then start playback while recording is running.
+    #    Always pause playback in finally, even if recording fails.
+    import threading
 
-    # 5. Stop playback
-    pause_playback(token)
+    recording_result: dict[str, AudioBuffer | Exception] = {}
 
-    # 6. Trim silence
+    def _do_record() -> None:
+        try:
+            recording_result["buffer"] = record_loopback(
+                device_name=device_name,
+                duration_s=total_record_s,
+            )
+        except Exception as e:
+            recording_result["error"] = e
+
+    record_thread = threading.Thread(target=_do_record, daemon=True)
+    record_thread.start()
+
+    # Small delay to ensure recorder is listening before playback starts
+    time.sleep(0.3)
+
+    try:
+        # 4. Start playback (recorder is already capturing)
+        start_playback(metadata.source_uri, token)
+
+        # 5. Wait for recording to complete
+        record_thread.join(timeout=total_record_s + 30)
+    finally:
+        # 6. Always pause playback
+        pause_playback(token)
+
+    # Check for recording errors
+    if "error" in recording_result:
+        raise recording_result["error"]  # type: ignore[misc]
+    if "buffer" not in recording_result:
+        msg = "Recording did not complete"
+        raise RuntimeError(msg)
+
+    recording = recording_result["buffer"]
+    assert isinstance(recording, AudioBuffer)
+
+    # 7. Trim silence (removes pre-roll silence and trailing buffer)
     trimmed = trim_silence(recording)
 
-    # 7. Save
+    # 8. Save
     output_path = save_flac_with_metadata(trimmed, metadata, output_dir)
     logger.info("Saved: %s", output_path)
 

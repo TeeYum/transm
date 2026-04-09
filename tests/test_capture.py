@@ -8,6 +8,7 @@ import numpy as np
 import pytest
 
 from transm.capture import (
+    capture_track,
     list_loopback_devices,
     parse_spotify_url,
     save_flac_with_metadata,
@@ -149,7 +150,93 @@ class TestSaveFlacWithMetadata:
         assert '"' not in path.name
 
 
+class TestFilenameCollisions:
+    def test_no_overwrite_on_collision(self, tmp_path: Path) -> None:
+        sr = 44100
+        buf = AudioBuffer(
+            data=np.zeros((sr, 2), dtype=np.float32), sample_rate=sr
+        )
+        meta = TrackMetadata(title="Same Song", artist="Same Artist", album="Album")
+
+        path1 = save_flac_with_metadata(buf, meta, tmp_path)
+        path2 = save_flac_with_metadata(buf, meta, tmp_path)
+
+        assert path1 != path2
+        assert path1.exists()
+        assert path2.exists()
+        assert "(1)" in path2.name
+
+
 class TestListDevices:
     def test_returns_list(self) -> None:
         devices = list_loopback_devices()
         assert isinstance(devices, list)
+
+
+class TestCaptureOrchestration:
+    """Tests for the capture_track orchestration logic using mocks."""
+
+    def test_playback_paused_on_recording_failure(self) -> None:
+        """Playback must be paused even if recording raises an exception."""
+        from unittest.mock import patch
+
+        from transm.capture import capture_track
+
+        pause_called = False
+
+        def mock_pause(token: str) -> None:
+            nonlocal pause_called
+            pause_called = True
+
+        with (
+            patch("transm.capture.get_track_metadata") as mock_meta,
+            patch("transm.capture.start_playback"),
+            patch("transm.capture.pause_playback", side_effect=mock_pause),
+            patch("transm.capture.record_loopback", side_effect=RuntimeError("device error")),
+            patch("transm.spotify_auth.get_access_token", return_value="fake-token"),
+        ):
+            mock_meta.return_value = TrackMetadata(
+                title="Test", artist="Test", album="Test", duration_ms=5000,
+                source_uri="spotify:track:abc",
+            )
+            with pytest.raises(RuntimeError, match="device error"):
+                capture_track("https://open.spotify.com/track/abc123")
+
+        assert pause_called, "pause_playback must be called even when recording fails"
+
+    def test_recording_starts_before_playback(self) -> None:
+        """Recording must start before playback to capture opening transients."""
+        from unittest.mock import patch
+
+        call_order: list[str] = []
+
+        def mock_record(*args: object, **kwargs: object) -> AudioBuffer:
+            call_order.append("record_start")
+            import time
+            time.sleep(0.1)
+            call_order.append("record_end")
+            return AudioBuffer(
+                data=np.zeros((44100, 2), dtype=np.float32), sample_rate=44100
+            )
+
+        def mock_play(*args: object, **kwargs: object) -> None:
+            call_order.append("playback_start")
+
+        with (
+            patch("transm.capture.get_track_metadata") as mock_meta,
+            patch("transm.capture.start_playback", side_effect=mock_play),
+            patch("transm.capture.pause_playback"),
+            patch("transm.capture.record_loopback", side_effect=mock_record),
+            patch("transm.capture.save_flac_with_metadata", return_value=Path("/tmp/test.flac")),
+            patch("transm.capture.trim_silence", side_effect=lambda b, **kw: b),
+            patch("transm.spotify_auth.get_access_token", return_value="fake-token"),
+        ):
+            mock_meta.return_value = TrackMetadata(
+                title="Test", artist="Test", album="Test", duration_ms=1000,
+                source_uri="spotify:track:abc",
+            )
+            capture_track("https://open.spotify.com/track/abc123")
+
+        assert call_order.index("record_start") < call_order.index("playback_start"), (
+            f"Recording must start before playback. Order was: {call_order}"
+        )

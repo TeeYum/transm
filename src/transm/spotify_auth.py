@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import http.server
 import json
@@ -41,10 +42,8 @@ def get_access_token() -> str:
     """Return a valid Spotify access token, refreshing or logging in as needed."""
     token_data = _load_token()
     if token_data:
-        # Try using the existing access token
         if _test_token(token_data.get("access_token", "")):
             return token_data["access_token"]
-        # Try refreshing
         if "refresh_token" in token_data:
             new_data = _refresh(token_data["refresh_token"])
             if new_data:
@@ -58,43 +57,74 @@ def login() -> str:
     """Run the full PKCE OAuth flow (opens browser). Returns access token."""
     client_id = _get_client_id()
     verifier = secrets.token_urlsafe(64)
-    challenge = (
-        hashlib.sha256(verifier.encode())
-        .digest()
-    )
-    import base64
+    challenge_bytes = hashlib.sha256(verifier.encode()).digest()
+    challenge_b64 = base64.urlsafe_b64encode(challenge_bytes).rstrip(b"=").decode()
 
-    challenge_b64 = base64.urlsafe_b64encode(challenge).rstrip(b"=").decode()
-
-    state = secrets.token_urlsafe(16)
+    expected_state = secrets.token_urlsafe(16)
     params = {
         "client_id": client_id,
         "response_type": "code",
         "redirect_uri": _REDIRECT_URI,
         "scope": _SCOPES,
-        "state": state,
+        "state": expected_state,
         "code_challenge_method": "S256",
         "code_challenge": challenge_b64,
     }
     auth_url = f"{_AUTH_URL}?{urllib.parse.urlencode(params)}"
 
     # Start local server to catch the callback
-    code_holder: dict[str, str] = {}
+    result_holder: dict[str, str] = {}
 
     class CallbackHandler(http.server.BaseHTTPRequestHandler):
         def do_GET(self) -> None:
-            query = urllib.parse.urlparse(self.path).query
-            qs = urllib.parse.parse_qs(query)
-            if "code" in qs:
-                code_holder["code"] = qs["code"][0]
-                self.send_response(200)
+            parsed = urllib.parse.urlparse(self.path)
+
+            # Only accept the callback path
+            if parsed.path != "/callback":
+                self.send_response(404)
+                self.end_headers()
+                return
+
+            qs = urllib.parse.parse_qs(parsed.query)
+
+            # Check for Spotify error responses
+            if "error" in qs:
+                error = qs["error"][0]
+                result_holder["error"] = error
+                self.send_response(400)
                 self.send_header("Content-Type", "text/html")
                 self.end_headers()
-                self.wfile.write(b"<h1>Authenticated! You can close this tab.</h1>")
-            else:
+                self.wfile.write(
+                    f"<h1>Authentication failed: {error}</h1>".encode()
+                )
+                return
+
+            # Validate state to prevent CSRF
+            returned_state = qs.get("state", [None])[0]
+            if returned_state != expected_state:
+                result_holder["error"] = "state_mismatch"
                 self.send_response(400)
+                self.send_header("Content-Type", "text/html")
                 self.end_headers()
-                self.wfile.write(b"Authentication failed.")
+                self.wfile.write(
+                    b"<h1>Authentication failed: state mismatch (possible CSRF)</h1>"
+                )
+                return
+
+            # Extract authorization code
+            if "code" not in qs:
+                result_holder["error"] = "no_code"
+                self.send_response(400)
+                self.send_header("Content-Type", "text/html")
+                self.end_headers()
+                self.wfile.write(b"<h1>Authentication failed: no code received</h1>")
+                return
+
+            result_holder["code"] = qs["code"][0]
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html")
+            self.end_headers()
+            self.wfile.write(b"<h1>Authenticated! You can close this tab.</h1>")
 
         def log_message(self, format: str, *args: object) -> None:
             pass  # Suppress server logs
@@ -108,8 +138,11 @@ def login() -> str:
     server_thread.join(timeout=120)
     server.server_close()
 
-    if "code" not in code_holder:
-        msg = "Did not receive auth code from Spotify."
+    if "error" in result_holder:
+        msg = f"Spotify authentication failed: {result_holder['error']}"
+        raise RuntimeError(msg)
+    if "code" not in result_holder:
+        msg = "Did not receive auth code from Spotify (timed out?)."
         raise RuntimeError(msg)
 
     # Exchange code for tokens
@@ -118,7 +151,7 @@ def login() -> str:
         data={
             "client_id": client_id,
             "grant_type": "authorization_code",
-            "code": code_holder["code"],
+            "code": result_holder["code"],
             "redirect_uri": _REDIRECT_URI,
             "code_verifier": verifier,
         },
@@ -146,7 +179,6 @@ def _refresh(refresh_token: str) -> dict | None:
         )
         resp.raise_for_status()
         data = resp.json()
-        # Preserve refresh token if not returned
         if "refresh_token" not in data:
             data["refresh_token"] = refresh_token
         return data
