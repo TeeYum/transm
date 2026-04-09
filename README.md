@@ -18,6 +18,24 @@ As I Lay Dying — "94 Hours" (10s clip, 0:30–0:40). Processed with the `2000s
 | True Peak | -4.2 dBTP | -1.0 dBTP | -3.2 dB |
 | Clipping | 0.00% | 0.00% | -- |
 
+---
+
+Of Mice & Men — "O.G. Loko" (15s clip, 2:49–3:04). Processed with the `2000s-metalcore` preset at intensity 0.7.
+
+- [Original clip](docs/samples/omm_ogloko_original_clip.wav) (brickwalled, -16.1 LUFS)
+- [Remastered clip](docs/samples/omm_ogloko_transm_clip.wav) (restored dynamics, -16.0 LUFS, +6.3 dB crest factor)
+
+| Metric | Before | After | Change |
+|--------|--------|-------|--------|
+| Crest Factor | 11.1 dB | 17.4 dB | **+6.3 dB** |
+| Peak-to-Loudness Ratio | 8.9 dB | 15.0 dB | **+6.1 dB** |
+| True Peak | -7.1 dBTP | -1.0 dBTP | +6.1 dB |
+| Clipping | 0.00% | 0.00% | -- |
+
+> **Tuning note:** Screamed vocals are noticeably more muted in the remastered version. The de-esser (6–9 kHz) can't distinguish sibilance from scream harmonics, and the -1.5 dB vocal level cut compounds the effect. This is a known limitation of the current `2000s-metalcore` preset — see [TeeYum/transm#3](https://github.com/TeeYum/transm/issues/3) for tuning plans.
+
+---
+
 > Audio clips are short excerpts used for technical demonstration of audio processing. All rights belong to the original artists.
 
 ## Status
@@ -29,7 +47,6 @@ As I Lay Dying — "94 Hours" (10s clip, 0:30–0:40). Processed with the `2000s
 - [Architecture](docs/architecture.md) — Technical architecture, pipeline design, tech stack, and roadmap
 - [Capture Component](docs/capture-component.md) — Lossless stream capture from Spotify, Apple Music, Tidal via system audio loopback
 - [Feasibility Assessment](docs/feasibility-assessment.md) — Honest difficulty estimates, model fine-tuning feasibility, and adversarial analysis review
-- [Agent Updates](agent-updates.md) — Changelog of all agent-authored changes
 
 ## Planned Stack
 
