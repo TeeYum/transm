@@ -2,7 +2,9 @@
 
 **Open-source AI-powered remastering for early-era metal and metalcore.**
 
-Transm separates crushed masters into individual stems using state-of-the-art AI models, applies genre-aware DSP processing to restore dynamics and reduce fatigue, and remixes them with proper headroom. Built for audiophiles who want their 2000s metalcore to sound less like it was mastered inside a trash compactor.
+Transm separates crushed masters into individual stems using state-of-the-art AI models, applies genre-aware DSP processing to restore dynamics and reduce fatigue, and remixes them with proper headroom. Built for audiophiles who want the pioneering works of metalcore to hit like modern music. 
+
+Original works should hopefully stop giving "the drum quality in St. Anger" sound that makes it seem like they were mastered inside a dumpster. Intention is to add more genre's over time as I learn what works best on this one and wrap a lightweight app around it.
 
 ## Demo: Before / After
 
