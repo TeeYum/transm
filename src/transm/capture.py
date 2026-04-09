@@ -192,7 +192,7 @@ def record_loopback(
 def list_loopback_devices() -> list[str]:
     """List available loopback/input audio devices."""
     try:
-        import soundcard  # type: ignore[import-untyped]
+        import soundcard
     except ImportError:
         return ["(soundcard not installed — pip install transm[capture])"]
 
