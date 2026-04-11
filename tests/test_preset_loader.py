@@ -25,29 +25,29 @@ class TestLoadBundledPreset:
         assert preset.description != ""
 
         # Verify drums fields populated from TOML
-        assert preset.drums.transient_attack_db == 4.5
-        assert preset.drums.high_shelf_freq_hz == 8000.0
-        assert preset.drums.low_shelf_gain_db == 2.0
+        assert preset.drums.transient_attack_db == 3.0
+        assert preset.drums.high_shelf_freq_hz == 9000.0
+        assert preset.drums.low_shelf_gain_db == 1.0
 
         # Verify vocals fields
-        assert preset.vocals.deesser_freq_low_hz == 7500.0
-        assert preset.vocals.presence_gain_db == 2.0
-        assert preset.vocals.level_adjust_db == 0.0
+        assert preset.vocals.deesser_freq_low_hz == 6500.0
+        assert preset.vocals.presence_gain_db == 5.0
+        assert preset.vocals.level_adjust_db == 2.0
 
         # Verify bass fields
-        assert preset.bass.hp_freq_hz == 30.0
-        assert preset.bass.harmonic_gain_db == 3.0
+        assert preset.bass.hp_freq_hz == 45.0
+        assert preset.bass.harmonic_gain_db == 2.5
 
         # Verify other fields
-        assert preset.other.mid_boost_gain_db == 2.5
-        assert preset.other.high_shelf_gain_db == -1.0
-        assert preset.other.stereo_width == 1.2
+        assert preset.other.mid_boost_gain_db == 4.0
+        assert preset.other.high_shelf_gain_db == 0.0
+        assert preset.other.stereo_width == 1.15
 
         # Verify mix levels
-        assert preset.mix.drums_db == 0.0
-        assert preset.mix.vocals_db == 1.5
-        assert preset.mix.bass_db == 2.0
-        assert preset.mix.other_db == 1.0
+        assert preset.mix.drums_db == 1.5
+        assert preset.mix.vocals_db == 2.0
+        assert preset.mix.bass_db == 1.0
+        assert preset.mix.other_db == 2.5
 
         # Verify global fields
         assert preset.global_params.intensity == 0.35
@@ -87,32 +87,32 @@ class TestScaleByIntensity:
         scaled = scale_by_intensity(preset, 0.5)
 
         # Gain fields should be halved
-        assert scaled.drums.transient_attack_db == pytest.approx(4.5 * 0.5)
-        assert scaled.drums.high_shelf_gain_db == pytest.approx(-3.0 * 0.5)
-        assert scaled.drums.low_shelf_gain_db == pytest.approx(2.0 * 0.5)
-        assert scaled.vocals.presence_gain_db == pytest.approx(2.0 * 0.5)
-        assert scaled.vocals.level_adjust_db == pytest.approx(0.0 * 0.5)
-        assert scaled.bass.mud_cut_gain_db == pytest.approx(-2.0 * 0.5)
-        assert scaled.bass.harmonic_gain_db == pytest.approx(3.0 * 0.5)
-        assert scaled.other.mid_boost_gain_db == pytest.approx(2.5 * 0.5)
-        assert scaled.other.high_shelf_gain_db == pytest.approx(-1.0 * 0.5)
+        assert scaled.drums.transient_attack_db == pytest.approx(3.0 * 0.5)
+        assert scaled.drums.high_shelf_gain_db == pytest.approx(-2.0 * 0.5)
+        assert scaled.drums.low_shelf_gain_db == pytest.approx(1.0 * 0.5)
+        assert scaled.vocals.presence_gain_db == pytest.approx(5.0 * 0.5)
+        assert scaled.vocals.level_adjust_db == pytest.approx(2.0 * 0.5)
+        assert scaled.bass.mud_cut_gain_db == pytest.approx(-4.0 * 0.5)
+        assert scaled.bass.harmonic_gain_db == pytest.approx(2.5 * 0.5)
+        assert scaled.other.mid_boost_gain_db == pytest.approx(4.0 * 0.5)
+        assert scaled.other.high_shelf_gain_db == pytest.approx(0.0 * 0.5)
 
         # Mix levels should NOT be scaled by intensity
-        assert scaled.mix.drums_db == 0.0
-        assert scaled.mix.vocals_db == 1.5
-        assert scaled.mix.bass_db == 2.0
-        assert scaled.mix.other_db == 1.0
+        assert scaled.mix.drums_db == 1.5
+        assert scaled.mix.vocals_db == 2.0
+        assert scaled.mix.bass_db == 1.0
+        assert scaled.mix.other_db == 2.5
 
         # Frequency fields should be unchanged
-        assert scaled.drums.high_shelf_freq_hz == 8000.0
+        assert scaled.drums.high_shelf_freq_hz == 9000.0
         assert scaled.drums.low_shelf_freq_hz == 80.0
-        assert scaled.vocals.deesser_freq_low_hz == 7500.0
-        assert scaled.vocals.presence_freq_hz == 4000.0
-        assert scaled.bass.hp_freq_hz == 30.0
-        assert scaled.bass.mud_cut_freq_hz == 250.0
+        assert scaled.vocals.deesser_freq_low_hz == 6500.0
+        assert scaled.vocals.presence_freq_hz == 3500.0
+        assert scaled.bass.hp_freq_hz == 45.0
+        assert scaled.bass.mud_cut_freq_hz == 220.0
 
         # Ratio fields should be unchanged
-        assert scaled.drums.expander_ratio == 1.5
+        assert scaled.drums.expander_ratio == 1.15
         assert scaled.vocals.expander_ratio == 1.2
         assert scaled.bass.comp_ratio == 2.0
 
@@ -140,10 +140,10 @@ class TestScaleByIntensity:
         assert scaled.other.high_shelf_gain_db == 0.0
 
         # Frequencies, ratios unchanged
-        assert scaled.drums.high_shelf_freq_hz == 8000.0
+        assert scaled.drums.high_shelf_freq_hz == 9000.0
         assert scaled.vocals.expander_ratio == 1.2
         assert scaled.bass.comp_attack_ms == 30.0
-        assert scaled.other.stereo_width == 1.2
+        assert scaled.other.stereo_width == 1.15
 
         # Intensity updated
         assert scaled.global_params.intensity == 0.0
