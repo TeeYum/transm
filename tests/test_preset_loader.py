@@ -49,11 +49,14 @@ class TestLoadBundledPreset:
         assert preset.other.high_shelf_gain_db == 0.0
         assert preset.other.stereo_width == 1.15
 
-        # Verify mix levels
-        assert preset.mix.drums_db == 1.5
-        assert preset.mix.vocals_db == 2.0
-        assert preset.mix.bass_db == 1.0
-        assert preset.mix.other_db == 2.5
+        # Verify mix levels — raw TOML values are pre-divided by intensity
+        # so `effective_mix` scaling yields the listening-approved targets.
+        # See `TestEffectiveMix.test_default_preset_effective_mix_matches_tuning_targets`
+        # for the anti-drift assertion on the effective values.
+        assert preset.mix.drums_db == pytest.approx(4.285714)
+        assert preset.mix.vocals_db == pytest.approx(5.714286)
+        assert preset.mix.bass_db == pytest.approx(2.857143)
+        assert preset.mix.other_db == pytest.approx(7.142857)
 
         # Verify global fields
         assert preset.global_params.intensity == 0.35
@@ -192,6 +195,36 @@ class TestEffectiveMix:
         assert scaled.vocals_db == 0.0
         assert scaled.bass_db == 0.0
         assert scaled.other_db == 0.0
+
+    def test_default_preset_effective_mix_matches_tuning_targets(self) -> None:
+        """Anti-drift test: bundled preset's effective mix must match listening targets.
+
+        The `2000s-metalcore` preset was tuned against these per-stem dB
+        offsets based on listening feedback from the project owner:
+
+            drums  +1.5 dB
+            vocals +2.0 dB
+            bass   +1.0 dB
+            other  +2.5 dB
+
+        Raw TOML values are authored at `target / global.intensity` so that
+        `effective_mix` scaling in `Pipeline.run` produces the listening
+        targets at the default intensity. If either the raw values OR
+        `global.intensity` change without preserving this relationship,
+        this test fails — catching silent dilution (or inflation) of the
+        mix balance.
+
+        This test is the remediation for the review concern on PR #10 that
+        the intensity-contract fix left no way to detect semantic drift
+        between "raw authored mix" and "what ships at default intensity."
+        """
+        preset = load_preset("2000s-metalcore")
+        eff = effective_mix(preset.mix, preset.global_params.intensity)
+
+        assert eff.drums_db == pytest.approx(1.5, abs=1e-5)
+        assert eff.vocals_db == pytest.approx(2.0, abs=1e-5)
+        assert eff.bass_db == pytest.approx(1.0, abs=1e-5)
+        assert eff.other_db == pytest.approx(2.5, abs=1e-5)
 
     def test_intensity_zero_is_true_remix_passthrough(self) -> None:
         """With `effective_mix(mix, 0.0)`, `remix_stems(sum_of_stems)` equals sum_of_stems.

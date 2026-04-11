@@ -38,11 +38,19 @@ high_shelf_gain_db = 0.0
 high_shelf_freq_hz = 10000.0
 stereo_width = 1.15
 
+# Raw mix values are authored as (tuning_target_db / global.intensity) so
+# that `effective_mix` scaling in Pipeline.run produces the intended audible
+# balance at the default intensity of 0.35. The listening targets were:
+#   drums +1.5 dB, vocals +2.0 dB, bass +1.0 dB, other +2.5 dB
+# At intensity=0.35 these become:
+#   drums 4.285714, vocals 5.714286, bass 2.857143, other 7.142857
+# If you change `global.intensity` below, you must re-author these raw
+# values to preserve the listening-approved balance (or accept a new one).
 [mix]
-drums_db = 1.5
-vocals_db = 2.0
-bass_db = 1.0
-other_db = 2.5
+drums_db = 4.285714
+vocals_db = 5.714286
+bass_db = 2.857143
+other_db = 7.142857
 
 [global]
 intensity = 0.35

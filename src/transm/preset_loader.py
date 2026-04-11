@@ -167,13 +167,16 @@ def validate_preset(params: PresetParams) -> list[str]:
     _check_freq("other", "mid_boost_high_hz", o.mid_boost_high_hz)
     _check_freq("other", "high_shelf_freq_hz", o.high_shelf_freq_hz)
 
-    # Mix levels
+    # Mix levels — bounded to match the ±12 dB cap applied to gain fields.
+    # Raw mix values are the per-stem targets BEFORE intensity scaling in
+    # `effective_mix`; at a low intensity like 0.35 the authored raw values
+    # can legitimately exceed ±6 dB to hit the desired effective balance.
     m = params.mix
     for stem_name in ("drums_db", "vocals_db", "bass_db", "other_db"):
         val = getattr(m, stem_name)
-        if abs(val) > 6.0:
+        if abs(val) > 12.0:
             warnings.append(
-                f"mix.{stem_name} = {val} dB is outside expected range (±6 dB)"
+                f"mix.{stem_name} = {val} dB is outside expected range (±12 dB)"
             )
 
     # Global
