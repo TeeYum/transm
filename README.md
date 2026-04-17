@@ -34,6 +34,21 @@ All clips processed with the `2000s-metalcore` preset at intensity 0.7. Download
 
 ---
 
+### Darkest Hour — "Tranquil" (15s clip, 4:03–4:18)
+
+Processed with the `2000s-metalcore` preset at intensity 0.35 (v5 tuning).
+
+- [Original clip](docs/samples/dh_tranquil_original_clip.wav) (-14.7 LUFS)
+- [Remastered clip](docs/samples/dh_tranquil_transm_v5_clip.wav) (-14.6 LUFS, +1.1 dB crest factor)
+
+| Metric | Before | After | Change |
+|--------|--------|-------|--------|
+| Crest Factor | 13.4 dB | 14.5 dB | **+1.1 dB** |
+| Peak-to-Loudness Ratio | 9.4 dB | 9.6 dB | **+0.2 dB** |
+| True Peak | -5.3 dBTP | -4.9 dBTP | +0.4 dB |
+
+---
+
 ### Of Mice & Men — "O.G. Loko" (15s clip, 2:49–3:04). Processed with the `2000s-metalcore` preset at intensity 0.7.
 
 - [Original clip](docs/samples/omm_ogloko_original_clip.wav) (brickwalled, -16.1 LUFS)
