@@ -6,6 +6,7 @@ import numpy as np
 from pedalboard import HighShelfFilter, LowShelfFilter, Pedalboard
 
 from transm.dsp.expander import expand_downward
+from transm.dsp.gate import noise_gate
 from transm.dsp.transient_shaper import shape_transients
 from transm.types import AudioBuffer, PresetParams
 
@@ -26,9 +27,12 @@ def process_drums(buffer: AudioBuffer, params: PresetParams) -> AudioBuffer:
     drums = params.drums
     sr = buffer.sample_rate
 
+    # 0. Noise gate — silence Demucs artifacts in quiet passages
+    result = noise_gate(buffer, threshold_db=params.global_params.gate_threshold_db)
+
     # 1. Transient shaper
     result = shape_transients(
-        buffer,
+        result,
         attack_gain_db=drums.transient_attack_db * intensity,
         sustain_gain_db=drums.transient_sustain_db * intensity,
     )

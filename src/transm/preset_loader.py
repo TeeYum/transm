@@ -185,6 +185,11 @@ def validate_preset(params: PresetParams) -> list[str]:
         warnings.append(
             f"global.intensity = {g.intensity} is outside valid range (0.0-1.0)"
         )
+    if g.gate_threshold_db > 0.0 or g.gate_threshold_db < -120.0:
+        warnings.append(
+            f"global.gate_threshold_db = {g.gate_threshold_db}"
+            " is outside valid range (-120.0 to 0.0)"
+        )
 
     return warnings
 
@@ -217,6 +222,7 @@ def scale_by_intensity(params: PresetParams, intensity: float) -> PresetParams:
             intensity=intensity,
             target_lufs=params.global_params.target_lufs,
             target_true_peak_dbtp=params.global_params.target_true_peak_dbtp,
+            gate_threshold_db=params.global_params.gate_threshold_db,
         ),
         mix=params.mix,
     )

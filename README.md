@@ -8,7 +8,7 @@ Original works should hopefully stop giving "the drum quality in St. Anger" soun
 
 ## Demo: Before / After
 
-All clips processed with the `2000s-metalcore` preset at intensity 0.7. Download and A/B compare.
+All clips processed with the `2000s-metalcore` preset. Download and A/B compare.
 
 ### As I Lay Dying — "94 Hours" (10s clip, 0:30–0:40)
 
@@ -34,19 +34,19 @@ All clips processed with the `2000s-metalcore` preset at intensity 0.7. Download
 
 ---
 
-### Of Mice & Men — "O.G. Loko" (15s clip, 2:49–3:04). Processed with the `2000s-metalcore` preset at intensity 0.7.
+### Of Mice & Men — "O.G. Loko" (15s clip, 2:49–3:04)
+
+Processed with the `2000s-metalcore` preset at intensity 0.35 (v6 tuning, per-stem noise gate).
 
 - [Original clip](docs/samples/omm_ogloko_original_clip.wav) (brickwalled, -16.1 LUFS)
-- [Remastered clip](docs/samples/omm_ogloko_transm_clip.wav) (restored dynamics, -16.0 LUFS, +6.3 dB crest factor)
+- [Remastered clip](docs/samples/omm_ogloko_transm_clip.wav) (restored dynamics, -16.1 LUFS, +2.7 dB crest factor)
 
 | Metric | Before | After | Change |
 |--------|--------|-------|--------|
-| Crest Factor | 11.1 dB | 17.4 dB | **+6.3 dB** |
-| Peak-to-Loudness Ratio | 8.9 dB | 15.0 dB | **+6.1 dB** |
-| True Peak | -7.1 dBTP | -1.0 dBTP | +6.1 dB |
+| Crest Factor | 11.2 dB | 13.9 dB | **+2.7 dB** |
+| Peak-to-Loudness Ratio | 8.0 dB | 9.7 dB | **+1.7 dB** |
+| True Peak | -8.1 dBTP | -6.4 dBTP | +1.7 dB |
 | Clipping | 0.00% | 0.00% | -- |
-
-> **Tuning note:** Screamed vocals are noticeably more muted in the remastered version. The de-esser (6–9 kHz) can't distinguish sibilance from scream harmonics, and the -1.5 dB vocal level cut compounds the effect. This is a known limitation of the current `2000s-metalcore` preset — see [TeeYum/transm#3](https://github.com/TeeYum/transm/issues/3) for tuning plans.
 
 ---
 

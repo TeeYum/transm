@@ -56,3 +56,4 @@ other_db = 7.142857
 intensity = 0.35
 target_lufs = -14.0
 target_true_peak_dbtp = -1.0
+gate_threshold_db = -40.0

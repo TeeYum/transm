@@ -8,6 +8,7 @@ from pedalboard import PeakFilter, Pedalboard
 from transm.dsp.common import db_to_linear
 from transm.dsp.deesser import deess
 from transm.dsp.expander import expand_downward
+from transm.dsp.gate import noise_gate
 from transm.types import AudioBuffer, PresetParams
 
 
@@ -27,9 +28,12 @@ def process_vocals(buffer: AudioBuffer, params: PresetParams) -> AudioBuffer:
     vocals = params.vocals
     sr = buffer.sample_rate
 
+    # 0. Noise gate — silence Demucs artifacts in quiet passages
+    result = noise_gate(buffer, threshold_db=params.global_params.gate_threshold_db)
+
     # 1. De-esser
     result = deess(
-        buffer,
+        result,
         freq_low=vocals.deesser_freq_low_hz,
         freq_high=vocals.deesser_freq_high_hz,
     )

@@ -7,6 +7,7 @@ import math
 import numpy as np
 from pedalboard import HighShelfFilter, PeakFilter, Pedalboard
 
+from transm.dsp.gate import noise_gate
 from transm.types import AudioBuffer, PresetParams
 
 
@@ -25,6 +26,9 @@ def process_other(buffer: AudioBuffer, params: PresetParams) -> AudioBuffer:
 
     other = params.other
     sr = buffer.sample_rate
+
+    # 0. Noise gate — silence Demucs artifacts in quiet passages
+    gated = noise_gate(buffer, threshold_db=params.global_params.gate_threshold_db)
 
     # 1 & 2. EQ via pedalboard
     # Mid boost: single PeakFilter at geometric mean of the range with wide Q
@@ -47,7 +51,7 @@ def process_other(buffer: AudioBuffer, params: PresetParams) -> AudioBuffer:
     )
 
     # Pedalboard expects (channels, samples) float32; we store (samples, channels)
-    data = buffer.data.copy()
+    data = gated.data.copy()
     processed = board(data.T, sample_rate=float(sr)).T
 
     # 3. M/S stereo width (only meaningful for stereo signals)

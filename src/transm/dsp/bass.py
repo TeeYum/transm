@@ -5,6 +5,7 @@ from __future__ import annotations
 import numpy as np
 from pedalboard import Compressor, HighpassFilter, PeakFilter, Pedalboard
 
+from transm.dsp.gate import noise_gate
 from transm.types import AudioBuffer, PresetParams
 
 
@@ -23,6 +24,9 @@ def process_bass(buffer: AudioBuffer, params: PresetParams) -> AudioBuffer:
 
     bass = params.bass
     sr = buffer.sample_rate
+
+    # 0. Noise gate — silence Demucs artifacts in quiet passages
+    gated = noise_gate(buffer, threshold_db=params.global_params.gate_threshold_db)
 
     board = Pedalboard(
         [
@@ -51,7 +55,7 @@ def process_bass(buffer: AudioBuffer, params: PresetParams) -> AudioBuffer:
     )
 
     # Pedalboard expects (channels, samples) float32; we store (samples, channels)
-    data = buffer.data.copy()
+    data = gated.data.copy()
     processed = board(data.T, sample_rate=float(sr)).T
 
     return AudioBuffer(data=processed.astype(np.float32), sample_rate=sr)

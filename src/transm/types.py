@@ -164,6 +164,7 @@ class GlobalParams:
     intensity: float = 0.35
     target_lufs: float = -14.0
     target_true_peak_dbtp: float = -1.0
+    gate_threshold_db: float = -40.0
 
 
 @dataclass(frozen=True)
